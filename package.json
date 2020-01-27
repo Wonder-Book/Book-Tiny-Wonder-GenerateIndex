@@ -1,0 +1,18 @@
+{
+  "name": "tiny-wonder-generate-index",
+  "version": "0.0.2",
+  "authors": "yyc",
+  "license": "MIT",
+  "main": "./lib/js/src/Generate.js",
+  "scripts": {
+    "watch": "bsb -clean-world -make-world -w",
+    "build": "bsb -clean-world -make-world"
+  },
+  "devDependencies": {
+  },
+  "dependencies": {
+    "glob": "^7.1.2",
+    "tiny-wonder-commonlib": "^0.0.1",
+    "bs-platform": "^7.0.1"
+  }
+}
