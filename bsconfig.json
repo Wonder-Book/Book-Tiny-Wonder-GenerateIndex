@@ -10,7 +10,6 @@
   ],
   "refmt": 3,
   "bs-dependencies": [
-    "tiny-wonder-commonlib"
   ],
   "package-specs": [
     "commonjs"

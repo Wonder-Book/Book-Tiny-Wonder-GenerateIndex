@@ -1,7 +1,5 @@
 open Node;
 
-open TinyWonderCommonlib;
-
 open GlobExtend;
 
 open GenerateType;

@@ -1,6 +1,6 @@
 {
   "name": "tiny-wonder-generate-index",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "authors": "yyc",
   "license": "MIT",
   "main": "./lib/js/src/Generate.js",
@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "glob": "^7.1.2",
-    "tiny-wonder-commonlib": "^0.0.1",
     "bs-platform": "^7.0.1"
   }
 }
