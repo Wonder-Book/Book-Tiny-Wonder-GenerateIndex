@@ -7,25 +7,37 @@ open GenerateType;
 let _writeToIndexFile = (destDir, content) => {
   let destFilePath = Path.join([|destDir, "Index.re"|]);
   Fs.writeFileAsUtf8Sync(destFilePath, content);
-  content
+  content;
 };
 
-let _buildContent = (fileDataList) =>
+let _buildModuleContent = (fileName, dataList) => {
+  dataList
+  |> List.fold_left(
+       (content, functionName) =>
+         content ++ {j|let $functionName = $fileName.$functionName;\n\n|j},
+       "",
+     );
+};
+
+let _buildContent = fileDataList =>
   fileDataList
   |> List.fold_left(
-       (content, (fileName, dataList)) =>
-         content
-         ++ (
-           dataList
-           |> List.fold_left(
-                (content, functionName) =>
-                  content ++ {j|let $functionName = $fileName.$functionName;\n\n|j},
-                ""
-              )
-         ),
-       ""
+       (content, (moduleName, fileName, dataList)) => {
+         let moduleContent = _buildModuleContent(fileName, dataList);
+
+         {j|$content
+
+      module $moduleName{
+        $moduleContent
+      }
+      |j};
+       },
+       "",
      )
-  |> ((content) => content |> Js.String.slice(~from=0, ~to_=Js.String.length(content) - 2));
+  |> (
+    content =>
+      content |> Js.String.slice(~from=0, ~to_=Js.String.length(content) - 2)
+  );
 
 let _findPublicFunctionList = (code: string) => {
   let regex = [%re {|/^let\s+([a-zA-Z][\w\d]+)\s+\=\s+/mg|}];
@@ -39,14 +51,26 @@ let _findPublicFunctionList = (code: string) => {
       | None => ()
       | Some(result) => resultList := [result, ...resultList^]
       }
-    }
+    };
   };
-  resultList^
+  resultList^;
 };
 
 let generate =
-    (globCwd: string, rootDir: string, sourceFileGlobArr: array(string), destDir: string, config) => {
+    (
+      globCwd: string,
+      rootDir: string,
+      sourceFileGlobArr: array(string),
+      destDir: string,
+      config,
+    ) => {
   let excludeList = config##exclude |> Array.to_list;
+  let replaceAPIModuleNameFunc =
+    config##replaceAPIModuleNameFunc
+    |> Js.Option.getWithDefault(moduleName =>
+         moduleName |> Js.String.replace("JsAPI", "")
+       );
+
   sourceFileGlobArr
   |> Array.to_list
   |> List.fold_left(
@@ -55,24 +79,27 @@ let generate =
          [
            syncWithConfig(Path.join([|rootDir, filePath|]), {"cwd": globCwd})
            |> Array.to_list
-           |> List.filter(
-                (filePath) =>
-                  excludeList
-                  |> List.filter((exclude) => filePath |> Js.String.includes(exclude))
-                  |> List.length === 0
+           |> List.filter(filePath =>
+                excludeList
+                |> List.filter(exclude =>
+                     filePath |> Js.String.includes(exclude)
+                   )
+                |> List.length === 0
               )
-           |> List.map(
-                (filePath) => (
+           |> List.map(filePath =>
+                (
+                  Path.basename_ext(filePath, ".re")
+                  |> replaceAPIModuleNameFunc,
                   Path.basename_ext(filePath, ".re"),
-                  Fs.readFileAsUtf8Sync(filePath) |> _findPublicFunctionList
+                  Fs.readFileAsUtf8Sync(filePath) |> _findPublicFunctionList,
                 )
               ),
-           ...fileDataList
-         ]
+           ...fileDataList,
+         ];
        },
-       []
+       [],
      )
   |> List.flatten
   |> _buildContent
-  |> _writeToIndexFile(destDir)
+  |> _writeToIndexFile(destDir);
 };

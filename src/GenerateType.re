@@ -1,1 +1,5 @@
-type config = {. "exclude": array(string)};
+type config = {
+  .
+  "exclude": array(string),
+  "replaceAPIModuleNameFunc": option(string => string),
+};
